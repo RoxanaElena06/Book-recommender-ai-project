@@ -1,12 +1,23 @@
 import os
 import streamlit as st
+
+# ── Bridge secrets FIRST, before importing anything that needs them
+from dotenv import load_dotenv
+load_dotenv()  # for local development via .env
+
+try:
+    for key in ["ANTHROPIC_API_KEY", "DATABRICKS_HOST", "DATABRICKS_HTTP_PATH", "DATABRICKS_TOKEN"]:
+        if key in st.secrets:
+            os.environ[key] = st.secrets[key]
+except Exception:
+    pass  # no secrets.toml locally — expected, .env already loaded above
+
+# ── NOW it's safe to import your own modules, since the environment
+# variables they need are already set
+
 from nl_to_sql import question_to_sql, phrase_answer
 from execute_sql import execute_query, get_table_preview
 
-
-for key in ["ANTHROPIC_API_KEY", "DATABRICKS_HOST", "DATABRICKS_HTTP_PATH", "DATABRICKS_TOKEN"]:
-    if key in st.secrets:
-        os.environ[key] = st.secrets[key]
 
 # ── Page setup 
 st.set_page_config(
