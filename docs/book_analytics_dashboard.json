@@ -1,0 +1,1192 @@
+{
+  "datasets": [
+    {
+      "name": "genre_ratings",
+      "displayName": "Genre Average Ratings",
+      "queryLines": [
+        "SELECT\n",
+        "  genre,\n",
+        "  AVG(average_rating) as avg_rating,\n",
+        "  COUNT(*) as book_count\n",
+        "FROM\n",
+        "  workspace.default.dim_books\n",
+        "  LATERAL VIEW EXPLODE(genres) AS genre\n",
+        "WHERE\n",
+        "  genre IS NOT NULL\n",
+        "GROUP BY\n",
+        "  genre\n",
+        "HAVING\n",
+        "  COUNT(*) >= 1000\n",
+        "ORDER BY\n",
+        "  avg_rating DESC"
+      ],
+      "catalog": "workspace",
+      "schema": "default"
+    },
+    {
+      "name": "5d0d55a5",
+      "displayName": "books",
+      "config": {
+        "version": "1.1",
+        "source": "workspace.default.books",
+        "dimensions": [
+          {
+            "expr": "source.*"
+          }
+        ],
+        "measures": [
+          {
+            "name": "count",
+            "expr": "COUNT(*)",
+            "comment": "Represents the total number of rows in the dataset. Use this measure to count all",
+            "displayName": "Count"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a7b064a6",
+      "displayName": "book_tags",
+      "config": {
+        "version": "1.1",
+        "source": "workspace.default.book_tags",
+        "dimensions": [
+          {
+            "expr": "source.*"
+          }
+        ],
+        "measures": [
+          {
+            "name": "count",
+            "expr": "COUNT(*)",
+            "comment": "Represents the total number of rows in the dataset. Use this measure to count all",
+            "displayName": "Count"
+          }
+        ]
+      }
+    },
+    {
+      "name": "2353b4e0",
+      "displayName": "ratings",
+      "config": {
+        "version": "1.1",
+        "source": "workspace.default.ratings",
+        "dimensions": [
+          {
+            "expr": "source.*"
+          }
+        ],
+        "measures": [
+          {
+            "name": "count",
+            "expr": "COUNT(*)",
+            "comment": "Represents the total number of rows in the dataset. Use this measure to count all",
+            "displayName": "Count"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ratings_by_year",
+      "displayName": "Ratings Trend by Year",
+      "queryLines": [
+        "SELECT\n",
+        "  original_publication_year as publication_year,\n",
+        "  AVG(average_rating) as avg_rating,\n",
+        "  COUNT(*) as book_count,\n",
+        "  SUM(ratings_count) as total_ratings\n",
+        "FROM\n",
+        "  workspace.default.dim_books\n",
+        "WHERE\n",
+        "  original_publication_year IS NOT NULL\n",
+        "  AND original_publication_year >= 1900\n",
+        "  AND original_publication_year <= 2026\n",
+        "GROUP BY\n",
+        "  original_publication_year\n",
+        "ORDER BY\n",
+        "  original_publication_year"
+      ],
+      "catalog": "workspace",
+      "schema": "default"
+    },
+    {
+      "name": "top_authors",
+      "displayName": "Top Authors",
+      "queryLines": [
+        "SELECT\n",
+        "  authors[0] as author,\n",
+        "  COUNT(*) as book_count,\n",
+        "  AVG(average_rating) as avg_rating,\n",
+        "  SUM(ratings_count) as total_ratings\n",
+        "FROM\n",
+        "  workspace.default.dim_books\n",
+        "WHERE\n",
+        "  authors[0] IS NOT NULL\n",
+        "GROUP BY\n",
+        "  authors[0]\n",
+        "HAVING\n",
+        "  COUNT(*) >= 5\n",
+        "ORDER BY\n",
+        "  book_count DESC\n",
+        "LIMIT 20"
+      ],
+      "catalog": "workspace",
+      "schema": "default"
+    },
+    {
+      "name": "key_metrics",
+      "displayName": "Key Metrics",
+      "queryLines": [
+        "SELECT\n",
+        "  COUNT(*) as total_books,\n",
+        "  AVG(average_rating) as overall_avg_rating,\n",
+        "  SUM(ratings_count) as total_ratings\n",
+        "FROM\n",
+        "  workspace.default.dim_books"
+      ],
+      "catalog": "workspace",
+      "schema": "default"
+    },
+    {
+      "name": "top_books",
+      "displayName": "Top Rated Books",
+      "queryLines": [
+        "SELECT\n",
+        "  title,\n",
+        "  authors[0] as author,\n",
+        "  average_rating,\n",
+        "  ratings_count,\n",
+        "  original_publication_year\n",
+        "FROM\n",
+        "  workspace.default.dim_books\n",
+        "WHERE\n",
+        "  ratings_count >= 1000\n",
+        "ORDER BY\n",
+        "  average_rating DESC,\n",
+        "  ratings_count DESC\n",
+        "LIMIT 20"
+      ],
+      "catalog": "workspace",
+      "schema": "default"
+    },
+    {
+      "name": "books_by_decade",
+      "displayName": "Books by Decade",
+      "queryLines": [
+        "SELECT\n",
+        "  CONCAT(CAST(FLOOR(original_publication_year / 10) * 10 AS STRING), 's') as decade,\n",
+        "  COUNT(*) as book_count,\n",
+        "  AVG(average_rating) as avg_rating\n",
+        "FROM\n",
+        "  workspace.default.dim_books\n",
+        "WHERE\n",
+        "  original_publication_year IS NOT NULL\n",
+        "  AND original_publication_year >= 1900\n",
+        "  AND original_publication_year <= 2026\n",
+        "GROUP BY\n",
+        "  FLOOR(original_publication_year / 10) * 10\n",
+        "ORDER BY\n",
+        "  FLOOR(original_publication_year / 10) * 10"
+      ],
+      "catalog": "workspace",
+      "schema": "default"
+    },
+    {
+      "name": "rating_distribution",
+      "displayName": "Rating Distribution",
+      "queryLines": [
+        "SELECT\n",
+        "  CASE\n",
+        "    WHEN average_rating >= 4.5 THEN '4.5-5.0'\n",
+        "    WHEN average_rating >= 4.0 THEN '4.0-4.5'\n",
+        "    WHEN average_rating >= 3.5 THEN '3.5-4.0'\n",
+        "    WHEN average_rating >= 3.0 THEN '3.0-3.5'\n",
+        "    WHEN average_rating >= 2.5 THEN '2.5-3.0'\n",
+        "    WHEN average_rating >= 2.0 THEN '2.0-2.5'\n",
+        "    ELSE '0.0-2.0'\n",
+        "  END as rating_range,\n",
+        "  COUNT(*) as book_count\n",
+        "FROM\n",
+        "  workspace.default.dim_books\n",
+        "WHERE\n",
+        "  average_rating IS NOT NULL\n",
+        "GROUP BY\n",
+        "  CASE\n",
+        "    WHEN average_rating >= 4.5 THEN '4.5-5.0'\n",
+        "    WHEN average_rating >= 4.0 THEN '4.0-4.5'\n",
+        "    WHEN average_rating >= 3.5 THEN '3.5-4.0'\n",
+        "    WHEN average_rating >= 3.0 THEN '3.0-3.5'\n",
+        "    WHEN average_rating >= 2.5 THEN '2.5-3.0'\n",
+        "    WHEN average_rating >= 2.0 THEN '2.0-2.5'\n",
+        "    ELSE '0.0-2.0'\n",
+        "  END\n",
+        "ORDER BY\n",
+        "  rating_range DESC"
+      ],
+      "catalog": "workspace",
+      "schema": "default"
+    },
+    {
+      "name": "genre_filter",
+      "displayName": "Genre Filter Options",
+      "queryLines": [
+        "SELECT DISTINCT\n",
+        "  genre\n",
+        "FROM\n",
+        "  workspace.default.dim_books\n",
+        "  LATERAL VIEW EXPLODE(genres) AS genre\n",
+        "WHERE\n",
+        "  genre IS NOT NULL\n",
+        "ORDER BY\n",
+        "  genre"
+      ],
+      "catalog": "workspace",
+      "schema": "default"
+    }
+  ],
+  "relationshipGraphs": [
+    {
+      "sources": [
+        {
+          "name": "Genre_Average_Ratings",
+          "datasetName": "genre_ratings"
+        },
+        {
+          "name": "books",
+          "datasetName": "5d0d55a5"
+        },
+        {
+          "name": "book_tags",
+          "datasetName": "a7b064a6"
+        },
+        {
+          "name": "ratings",
+          "datasetName": "2353b4e0"
+        },
+        {
+          "name": "Ratings_Trend_by_Year",
+          "datasetName": "ratings_by_year"
+        },
+        {
+          "name": "Top_Authors",
+          "datasetName": "top_authors"
+        },
+        {
+          "name": "Key_Metrics",
+          "datasetName": "key_metrics"
+        },
+        {
+          "name": "Top_Rated_Books",
+          "datasetName": "top_books"
+        },
+        {
+          "name": "Books_by_Decade",
+          "datasetName": "books_by_decade"
+        },
+        {
+          "name": "Rating_Distribution",
+          "datasetName": "rating_distribution"
+        },
+        {
+          "name": "Genre_Filter_Options",
+          "datasetName": "genre_filter"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "391ddc5f",
+      "displayName": "Book Dataset",
+      "layout": [
+        {
+          "widget": {
+            "name": "8eb8c34d",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "sum(Genre_Average_Ratings__avg_rating)",
+                      "expression": "SUM(`Genre_Average_Ratings`.`avg_rating`)"
+                    },
+                    {
+                      "name": "Genre_Average_Ratings__genre",
+                      "expression": "`Genre_Average_Ratings`.`genre`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Average Rating by Genre",
+                "showTitle": true
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(Genre_Average_Ratings__avg_rating)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "Genre_Average_Ratings__genre",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 7,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "76187bd3",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Genre_Average_Ratings__book_count",
+                      "expression": "`Genre_Average_Ratings`.`book_count`"
+                    },
+                    {
+                      "name": "Genre_Average_Ratings__genre",
+                      "expression": "`Genre_Average_Ratings`.`genre`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Books per Genre",
+                "showTitle": true,
+                "showDescription": false
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Genre_Average_Ratings__book_count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "Genre_Average_Ratings__genre",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 7,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "7cba89dd",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "sum(Ratings_Trend_by_Year__publication_year)",
+                      "expression": "SUM(`Ratings_Trend_by_Year`.`publication_year`)"
+                    },
+                    {
+                      "name": "Ratings_Trend_by_Year__avg_rating",
+                      "expression": "`Ratings_Trend_by_Year`.`avg_rating`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Ratings Trend by Publication Year",
+                "showTitle": true
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(Ratings_Trend_by_Year__publication_year)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "Ratings_Trend_by_Year__avg_rating",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "e66c3f54",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Book Analytics Dashboard\n",
+                "Explore insights from 10,000 books with comprehensive analytics on ratings, genres, authors, and publication trends. Use the filters below to drill down into specific segments."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "counter_books",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Key_Metrics__total_books",
+                      "expression": "`Key_Metrics`.`total_books`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Total Books",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "Key_Metrics__total_books",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "counter_rating",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Key_Metrics__overall_avg_rating",
+                      "expression": "`Key_Metrics`.`overall_avg_rating`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Average Rating",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "Key_Metrics__overall_avg_rating",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 1,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "counter_ratings_total",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Key_Metrics__total_ratings",
+                      "expression": "`Key_Metrics`.`total_ratings`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Total Ratings",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "Key_Metrics__total_ratings",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 1,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "top_books_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Top_Rated_Books__title",
+                      "expression": "`Top_Rated_Books`.`title`"
+                    },
+                    {
+                      "name": "Top_Rated_Books__author",
+                      "expression": "`Top_Rated_Books`.`author`"
+                    },
+                    {
+                      "name": "Top_Rated_Books__average_rating",
+                      "expression": "`Top_Rated_Books`.`average_rating`"
+                    },
+                    {
+                      "name": "Top_Rated_Books__ratings_count",
+                      "expression": "`Top_Rated_Books`.`ratings_count`"
+                    },
+                    {
+                      "name": "Top_Rated_Books__original_publication_year",
+                      "expression": "`Top_Rated_Books`.`original_publication_year`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Top Rated Books",
+                "showTitle": true
+              },
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "Top_Rated_Books__title"
+                  },
+                  {
+                    "fieldName": "Top_Rated_Books__author"
+                  },
+                  {
+                    "fieldName": "Top_Rated_Books__average_rating"
+                  },
+                  {
+                    "fieldName": "Top_Rated_Books__ratings_count"
+                  },
+                  {
+                    "fieldName": "Top_Rated_Books__original_publication_year"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 19,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "top_authors_chart",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Top_Authors__author",
+                      "expression": "`Top_Authors`.`author`"
+                    },
+                    {
+                      "name": "sum(Top_Authors__book_count)",
+                      "expression": "SUM(`Top_Authors`.`book_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Top Authors by Book Count",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Top_Authors__author",
+                  "displayName": "author",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(Top_Authors__book_count)",
+                  "displayName": "book_count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Top_Authors__author",
+                  "displayName": "author",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 25,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "rating_dist_chart",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "sum(Rating_Distribution__book_count)",
+                      "expression": "SUM(`Rating_Distribution`.`book_count`)"
+                    },
+                    {
+                      "name": "Rating_Distribution__rating_range",
+                      "expression": "`Rating_Distribution`.`rating_range`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Rating Distribution",
+                "showTitle": true
+              },
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(Rating_Distribution__book_count)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "book_count"
+                },
+                "color": {
+                  "fieldName": "Rating_Distribution__rating_range",
+                  "displayName": "rating_range",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 25,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "decade_chart",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Books_by_Decade__decade",
+                      "expression": "`Books_by_Decade`.`decade`"
+                    },
+                    {
+                      "name": "sum(Books_by_Decade__book_count)",
+                      "expression": "SUM(`Books_by_Decade`.`book_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Books by Decade",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Books_by_Decade__decade",
+                  "displayName": "decade",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(Books_by_Decade__book_count)",
+                  "displayName": "book_count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Books_by_Decade__decade",
+                  "displayName": "decade",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 31,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_genre",
+            "queries": [
+              {
+                "name": "dashboards/01f18c0cfb2b1ca0b480b6b146117e3c/datasets/90c101f6be5d423a9a0461e0eca383d6_genre",
+                "query": {
+                  "datasetName": "genre_filter",
+                  "fields": [
+                    {
+                      "name": "genre",
+                      "expression": "`genre`"
+                    },
+                    {
+                      "name": "genre_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Filter by Genre",
+                "showTitle": true
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "genre",
+                    "queryName": "dashboards/01f18c0cfb2b1ca0b480b6b146117e3c/datasets/90c101f6be5d423a9a0461e0eca383d6_genre"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_year",
+            "queries": [
+              {
+                "name": "dashboards/01f18c0cfb2b1ca0b480b6b146117e3c/datasets/8c9efd932a684601a270dd043ea57718_publication_year",
+                "query": {
+                  "datasetName": "ratings_by_year",
+                  "fields": [
+                    {
+                      "name": "publication_year",
+                      "expression": "`publication_year`"
+                    },
+                    {
+                      "name": "publication_year_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Filter by Publication Year",
+                "showTitle": true
+              },
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "publication_year",
+                    "queryName": "dashboards/01f18c0cfb2b1ca0b480b6b146117e3c/datasets/8c9efd932a684601a270dd043ea57718_publication_year"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 4,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_rating",
+            "queries": [
+              {
+                "name": "dashboards/01f18c0cfb2b1ca0b480b6b146117e3c/datasets/5105ad908eaf44728b406e347a3ee987_rating_range",
+                "query": {
+                  "datasetName": "rating_distribution",
+                  "fields": [
+                    {
+                      "name": "rating_range",
+                      "expression": "`rating_range`"
+                    },
+                    {
+                      "name": "rating_range_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Filter by Rating Range",
+                "showTitle": true
+              },
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "rating_range",
+                    "queryName": "dashboards/01f18c0cfb2b1ca0b480b6b146117e3c/datasets/5105ad908eaf44728b406e347a3ee987_rating_range"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 4,
+            "width": 4,
+            "height": 3
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#F9FAFB",
+        "dark": "#111827"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#1F2937"
+      },
+      "selectionColor": {
+        "light": "#3B82F6",
+        "dark": "#60A5FA"
+      },
+      "visualizationColors": [
+        "#3B82F6",
+        "#10B981",
+        "#F59E0B",
+        "#EF4444",
+        "#8B5CF6",
+        "#EC4899",
+        "#14B8A6",
+        "#F97316",
+        "#06B6D4",
+        "#84CC16"
+      ],
+      "widgetHeaderAlignment": "LEFT",
+      "widgetPadding": 16,
+      "widgetMargin": 8,
+      "widgetCornerRadius": 8,
+      "widgetShadow": 5,
+      "fontSettings": {
+        "base": {
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": 400
+        },
+        "widgetTitle": {
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fontWeight": 600
+        },
+        "fieldTitle": {
+          "fontFamily": "Inter",
+          "fontSize": 12,
+          "fontWeight": 500
+        },
+        "fieldValue": {
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": 400
+        }
+      }
+    },
+    "applyModeEnabled": false
+  }
+}
