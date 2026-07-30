@@ -11,7 +11,10 @@ An end-to-end data pipeline and analytics platform built on the Goodbooks-10k da
 See full queries and findings: [docs/business_answers.sql](docs/business_answers.sql)
 
 ## Architecture
-![Architecture diagram](docs/architecture_diagram.png)
+![Architecture diagram](docs/dashboard_export.png)
+
+## Book agent
+https://book-recommender-ai-project-f7dqe74r9igmyxntpe38kg.streamlit.app/ 
 
 ## What each component does
 **`01_etl_clean_books.ipynb`** 
