@@ -9,6 +9,20 @@ def extract_text(response) -> str:
     return "".join(text_blocks).strip()
 
 
+def clean_sql(raw_sql: str) -> str:
+    # Sometimes the model wraps its answer in a markdown code fence
+    # (```sql ... ```) even when told not to. Strip that off before
+    # the query is validated or executed.
+    cleaned = raw_sql.strip()
+    if cleaned.startswith("```"):
+        # Remove the opening fence (handles ```sql or plain ```)
+        cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else cleaned
+        cleaned = cleaned.lstrip("sql").lstrip()  # in case "sql" stuck to the fence
+    if cleaned.endswith("```"):
+        cleaned = cleaned.rsplit("```", 1)[0]
+    return cleaned.strip()
+
+
 def question_to_sql(user_question: str) -> str:
     prompt = f"""You are a SQL generator for a Spark SQL / Databricks environment.
 Here is the schema you must use:
@@ -25,7 +39,8 @@ just the raw SQL) that answers this question:
         max_tokens=500,
         messages=[{"role": "user", "content": prompt}]
     )
-    return extract_text(response)
+    raw_output = extract_text(response)
+    return clean_sql(raw_output)
 
 
 if __name__ == "__main__":
@@ -40,3 +55,23 @@ if __name__ == "__main__":
     print("Results:")
     for row in rows:
         print(row)
+
+
+def phrase_answer(question: str, columns, rows) -> str:
+    # Turn the raw result rows into a simple text block so Claude can read it
+    result_text = str(columns) + "\n" + "\n".join(str(r) for r in rows[:20])
+
+    prompt = f"""A user asked this question about a book dataset: "{question}"
+
+Here are the query results:
+{result_text}
+
+Write a short, clear, one-to-two sentence answer to their question based
+only on this data. Do not make up any numbers not shown above."""
+
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=300,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.content[0].text.strip()
