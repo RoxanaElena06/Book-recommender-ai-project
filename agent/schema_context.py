@@ -1,7 +1,3 @@
-# This is just a plain text description of your data model, written by hand.
-# It's what tells Claude what tables/columns exist, so it can generate
-# accurate SQL. This is NOT your actual data — just its shape/structure.
-
 SCHEMA_CONTEXT = """
 Table: dim_books
 Columns:
