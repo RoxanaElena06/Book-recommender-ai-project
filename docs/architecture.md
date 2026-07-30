@@ -55,3 +55,8 @@ Runs daily at 8:00 AM
 ### Failure test
 1. To verify the alerting actually works, the `run_etl` task's `raw_volume_path` parameter was temporarily set to a non-existent path (`/Volumes/workspace/default/books_raw/does_not_exist/`) and the Job was triggered manually.
 2. Result: `run_etl` failed as expected, `run_data_modeling` and `run_commender` correctly did not execute  and a failure email notification was received.
+
+## Deployment (Day 15 extension)
+The NL-to-SQL agent is deployed publicly via Streamlit Community Cloud: https://book-recommender-ai-project-f7dqe74r9igmyxntpe38kg.streamlit.app/ 
+
+Deployment required bridging Streamlit's secrets management into environment variables before importing modules that depend on them at import time (a Python import-order issue, not a secrets problem itself).
