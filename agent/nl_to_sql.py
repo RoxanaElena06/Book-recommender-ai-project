@@ -29,6 +29,14 @@ just the raw SQL) that answers this question:
 
 
 if __name__ == "__main__":
-    # Quick manual test
-    sql = question_to_sql("Which genre has the highest average rating with at least 1000 books?")
-    print(sql)
+    from execute_sql import execute_query
+
+    question = "Which genre has the highest average rating with at least 1000 books?"
+    sql_query = question_to_sql(question)
+    print("Generated SQL:\n", sql_query)
+
+    columns, rows = execute_query(sql_query)
+    print("\nColumns:", columns)
+    print("Results:")
+    for row in rows:
+        print(row)
